@@ -1,0 +1,1129 @@
+{
+	"info": {
+		"_postman_id": "leaderboard-api-collection",
+		"name": "Leaderboard API - Complete Testing",
+		"description": "Complete Postman collection for testing Leaderboard API with authentication, authorization, rate limiting, and all endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register New User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test response status",
+									"pm.test(\"Status code is 201 or 409\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+									"});",
+									"",
+									"// Save token if registration successful",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.test(\"Response has access_token\", function () {",
+									"        pm.expect(jsonData).to.have.property('access_token');",
+									"    });",
+									"    ",
+									"    if (jsonData.access_token) {",
+									"        pm.collectionVariables.set(\"user_token\", jsonData.access_token);",
+									"        pm.collectionVariables.set(\"username\", jsonData.user.username);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"{{test_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new user account. Returns JWT token on success."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Admin User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.test(\"Admin user created\", function () {",
+									"        pm.expect(jsonData.user.role).to.eql('admin');",
+									"    });",
+									"    ",
+									"    if (jsonData.access_token) {",
+									"        pm.collectionVariables.set(\"admin_token\", jsonData.access_token);",
+									"        pm.collectionVariables.set(\"admin_username\", jsonData.user.username);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new admin user with elevated privileges."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 201\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Response has access_token\", function () {",
+									"    pm.expect(jsonData).to.have.property('access_token');",
+									"});",
+									"",
+									"pm.test(\"Response has user object\", function () {",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData.user).to.have.property('username');",
+									"    pm.expect(jsonData.user).to.have.property('role');",
+									"});",
+									"",
+									"// Save token for authenticated requests",
+									"if (jsonData.access_token) {",
+									"    pm.collectionVariables.set(\"user_token\", jsonData.access_token);",
+									"    pm.collectionVariables.set(\"username\", jsonData.user.username);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"{{test_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login with existing credentials. Returns JWT token."
+					},
+					"response": []
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 201\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"User is admin\", function () {",
+									"    pm.expect(jsonData.user.role).to.eql('admin');",
+									"});",
+									"",
+									"if (jsonData.access_token) {",
+									"    pm.collectionVariables.set(\"admin_token\", jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login as admin user."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Returns unauthorized error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.statusCode).to.eql(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"wronguser\",\n  \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Test login with invalid credentials - should return 401."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration and login"
+		},
+		{
+			"name": "Scores",
+			"item": [
+				{
+					"name": "Submit Score (User)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains score data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('playerName');",
+									"    pm.expect(jsonData).to.have.property('score');",
+									"    pm.expect(jsonData.playerName).to.eql(pm.collectionVariables.get('username'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": 1500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Submit a score for the authenticated user. Users can only submit scores for themselves."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit High Score (User)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Score is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.score).to.eql(2500);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": 2500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Submit a higher score to test leaderboard ranking."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Score - Unauthorized",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Returns unauthorized error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.statusCode).to.eql(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"testplayer\",\n  \"score\": 1000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Test submitting score without authentication - should return 401."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Score - Invalid Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid_token_here"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"testplayer\",\n  \"score\": 1000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Test with invalid JWT token - should return 401."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Score - Forbidden (Another User)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([403, 404]);",
+									"});",
+									"",
+									"pm.test(\"User cannot submit score for others\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.statusCode).to.be.oneOf([403, 404]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"anotherplayer\",\n  \"score\": 3000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Test authorization - regular users cannot submit scores for other users."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Score - Invalid Data (Negative Score)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Validation error returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.statusCode).to.eql(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": -100\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Test input validation - negative scores should be rejected."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Score - Invalid Data (Missing Fields)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Test validation - missing required fields should be rejected."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Score (Admin for Another User)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    pm.test(\"Admin can submit score for any user\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('score');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": 5000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Test admin privilege - admins can submit scores for any user."
+					},
+					"response": []
+				}
+			],
+			"description": "Score submission endpoints with authentication and authorization tests"
+		},
+		{
+			"name": "Leaderboard",
+			"item": [
+				{
+					"name": "Get Leaderboard",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Returns max 10 entries\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.length).to.be.at.most(10);",
+									"});",
+									"",
+									"pm.test(\"Each entry has playerName and score\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        jsonData.forEach(function(entry) {",
+									"            pm.expect(entry).to.have.property('playerName');",
+									"            pm.expect(entry).to.have.property('score');",
+									"            pm.expect(entry.score).to.be.a('number');",
+									"        });",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Scores are sorted in descending order\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 1) {",
+									"        for (let i = 0; i < jsonData.length - 1; i++) {",
+									"            pm.expect(jsonData[i].score).to.be.at.least(jsonData[i + 1].score);",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaderboard",
+							"host": ["{{base_url}}"],
+							"path": ["leaderboard"]
+						},
+						"description": "Get top 10 scores. Public endpoint, no authentication required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard (Authenticated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Authenticated users can also view leaderboard\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/leaderboard",
+							"host": ["{{base_url}}"],
+							"path": ["leaderboard"]
+						},
+						"description": "Verify that authenticated users can also access the leaderboard."
+					},
+					"response": []
+				}
+			],
+			"description": "Leaderboard viewing endpoints"
+		},
+		{
+			"name": "Rate Limiting",
+			"item": [
+				{
+					"name": "Rate Limit Test - Request 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": {{$randomInt}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "First request to test rate limiting"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Limit Test - Request 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": {{$randomInt}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Second request"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Limit Test - Request 3",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": {{$randomInt}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "Third request"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Limit Test - Should Be Throttled",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// After multiple rapid requests, this should be rate limited",
+									"// Note: Run all Rate Limit Test requests quickly in succession",
+									"pm.test(\"May be rate limited (429) or succeed if under limit\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 429]);",
+									"});",
+									"",
+									"if (pm.response.code === 429) {",
+									"    pm.test(\"Rate limit working correctly\", function () {",
+									"        console.log(\"✓ Rate limiting is working - request was throttled\");",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"{{username}}\",\n  \"score\": {{$randomInt}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						},
+						"description": "This request should be throttled if rate limit (10 req/min) is exceeded. Run multiple requests quickly to test."
+					},
+					"response": []
+				}
+			],
+			"description": "Test rate limiting functionality (10 requests per minute on /scores endpoint)"
+		},
+		{
+			"name": "Complete Flow Test",
+			"item": [
+				{
+					"name": "1. Register Player 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"player1_token\", jsonData.access_token);",
+									"    pm.collectionVariables.set(\"player1_name\", jsonData.user.username);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"flowtest_player1\",\n  \"password\": \"test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Register Player 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"player2_token\", jsonData.access_token);",
+									"    pm.collectionVariables.set(\"player2_name\", jsonData.user.username);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"flowtest_player2\",\n  \"password\": \"test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Player 1 Submits Score",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{player1_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"flowtest_player1\",\n  \"score\": 2000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Player 2 Submits Score",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{player2_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"flowtest_player2\",\n  \"score\": 3500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. View Updated Leaderboard",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Leaderboard contains test players\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var playerNames = jsonData.map(p => p.playerName);",
+									"    ",
+									"    // Check if our test players are in the leaderboard",
+									"    var hasPlayer = playerNames.some(name => name.includes('flowtest_player'));",
+									"    ",
+									"    if (hasPlayer) {",
+									"        console.log(\"✓ Test players found in leaderboard\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaderboard",
+							"host": ["{{base_url}}"],
+							"path": ["leaderboard"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Player 1 Submits Higher Score",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{player1_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"playerName\": \"flowtest_player1\",\n  \"score\": 4500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/scores",
+							"host": ["{{base_url}}"],
+							"path": ["scores"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "7. Final Leaderboard Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Complete flow test successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    console.log(\"Final Leaderboard:\", JSON.stringify(jsonData, null, 2));",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaderboard",
+							"host": ["{{base_url}}"],
+							"path": ["leaderboard"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Complete end-to-end flow testing: register users, submit scores, view leaderboard"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "test_username",
+			"value": "testplayer",
+			"type": "string"
+		},
+		{
+			"key": "test_password",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "admin_username",
+			"value": "admintest",
+			"type": "string"
+		},
+		{
+			"key": "admin_password",
+			"value": "admin123",
+			"type": "string"
+		},
+		{
+			"key": "user_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "player1_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "player2_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "player1_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "player2_name",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

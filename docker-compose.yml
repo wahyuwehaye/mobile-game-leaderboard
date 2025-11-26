@@ -1,0 +1,21 @@
+
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leaderboard-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_DATABASE: leaderboard.sqlite
+      JWT_SECRET: your-production-secret-key-change-this
+      JWT_EXPIRATION: 24h
+      THROTTLE_TTL: 60
+      THROTTLE_LIMIT: 10
+    volumes:
+      - ./logs:/app/logs
